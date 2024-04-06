@@ -3,6 +3,7 @@
 #include <conio.h>
 #include <Windows.h>
 #include <time.h>
+#include <string>
 
 //미사일 구조체
 struct BULLET
@@ -23,6 +24,9 @@ int playerY;
 int enemyX;
 int enemyY;
 
+//플레이어 체력
+int playerHp; 
+
 //미사일 갯수
 BULLET playerBullet[20];
 BULLET enemyBullet[20];
@@ -36,8 +40,10 @@ void PlayerBulletDraw(); //플레이어의 미사일을 그려주는 함수
 void EnemyBulletDraw(); //적의 미사일을 그려주는 함수
 void PlayerDraw(); //플레이어 그리는 함수
 void EnemyDraw(); //적을 그리는 함수
+void PlayerHpDraw(); //플레이어의 HP 체력 그리기 
 void EnemyMove(); //적을 움직이는 함수
-void ClashEnemyAndBullet(); //충돌 처리 함수
+void ClashEnemyAndBullet(); //적 충돌 처리 함수
+void ClashPlayerAndBullet(); //플레이어 충돌 처리 함수
 void CursorView(); //콘솔 커서 안보이게 하는 함수
 
 void gotoxy(int x, int y) {
@@ -57,6 +63,12 @@ void main()
 	//적 좌표 위치
 	enemyX = 77;
 	enemyY = 12;
+
+	//플레이어 초기 HP
+	playerHp = 5; 
+	
+
+
 
 	//플레이어 미사일 초기화 (미사일 발사전 준비 상태)
 	for (int i = 0; i < 20; i++)
@@ -102,14 +114,7 @@ void main()
 			PrintScreen();
 			
 		}
-
-
-
-
 	}
-
-
-
 }
 
 void CursorView()
@@ -144,6 +149,8 @@ void GameMain()
 	PlayerBulletDraw();
 	//플레이어를 그려준다.
 	PlayerDraw();
+	//플에이어의 체력을 그려준다.
+	PlayerHpDraw();
 	//적의 움직임
 	EnemyMove();
 	//적의 미사일을 그려준다
@@ -152,6 +159,8 @@ void GameMain()
 	EnemyDraw();
 	//미사일 적의 충돌
 	ClashEnemyAndBullet();
+	//플레이어의 충돌처리
+	ClashPlayerAndBullet();
 
 
 }
@@ -285,6 +294,7 @@ void EnemyBulletDraw()
 
 }
 
+
 void PlayerDraw()
 {
 	//플레이어 그리기
@@ -307,6 +317,21 @@ void EnemyDraw()
 	bg[enemyY][enemyX + 0] = 'O';
 	bg[enemyY][enemyX + 1] = '-';
 	bg[enemyY][enemyX + 2] = '>';
+
+}
+//플레이어의 HP 체력 그리기 
+void PlayerHpDraw()
+{
+	std::string text = "PH";
+	for (int i = 0; i < text.length(); ++i) {
+		bg[1][i + 70] = text[i];
+	}
+
+	for (int i = 0; i < playerHp; ++i) {
+		bg[2][i + 68] = '*';
+	}
+
+
 
 }
 
@@ -357,7 +382,7 @@ void EnemyMove()
 	//}
 }
 
-//충돌처리함수
+//적 충돌처리함수
 void ClashEnemyAndBullet()
 {
 	//미사일 20개 전체 판별
@@ -377,11 +402,45 @@ void ClashEnemyAndBullet()
 					enemyX = 77;
 					enemyY = (rand() % 20) + 2;
 					playerBullet[i].fire = false;
-
 				}
-
-
 			}
+		}
+	}
+}
+
+//플레이어 충돌처리 함수
+void ClashPlayerAndBullet()
+{
+	for (int i = 0; i < 20; i++) 
+	{
+		if (enemyBullet[i].fire == true)
+		{
+			if (enemyBullet[i].y == playerY)
+			{
+				if (enemyBullet[i].x >= (playerX - 1) && enemyBullet[i].x <= (playerX + 1))
+				{
+					// gotoxy가 아닌 단순 출력으로 하는게 좋을거같음 .. 
+					//// 충돌되면 화면에 출력 
+					//gotoxy(20, 6);
+					//printf("충돌");
+
+					////1초대기
+					//Sleep(1000);
+
+					////충돌 메세지 지우기
+					//printf("          "); //공백 문자로 덮어쓰기
+
+					// 플레이어 초기 위치로 복귀
+					playerX = 0;
+					playerY = 12;
+					// 플레이어의 체력 감소
+					playerHp--;
+					if (playerHp < 0)
+						playerHp = 0;
+					enemyBullet[i].fire = false;
+				}
+			}
+
 		}
 	}
 }
