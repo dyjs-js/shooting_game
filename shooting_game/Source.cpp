@@ -26,6 +26,8 @@ int enemyY;
 
 //플레이어 체력
 int playerHp; 
+//플레이어 스코어
+int playerScore;
 
 //미사일 갯수
 BULLET playerBullet[20];
@@ -41,10 +43,14 @@ void EnemyBulletDraw(); //적의 미사일을 그려주는 함수
 void PlayerDraw(); //플레이어 그리는 함수
 void EnemyDraw(); //적을 그리는 함수
 void PlayerHpDraw(); //플레이어의 HP 체력 그리기 
+void PlayerScoreDraw(); //플레이어의 스코어 그리기
 void EnemyMove(); //적을 움직이는 함수
 void ClashEnemyAndBullet(); //적 충돌 처리 함수
 void ClashPlayerAndBullet(); //플레이어 충돌 처리 함수
 void CursorView(); //콘솔 커서 안보이게 하는 함수
+void blinkScreen(); ////화면의 색상을 변경하여 깜빡이는 효과주는 함수
+
+
 
 void gotoxy(int x, int y) {
 	COORD pos = { x, y };
@@ -65,7 +71,7 @@ void main()
 	enemyY = 12;
 
 	//플레이어 초기 HP
-	playerHp = 5; 
+	playerHp = 2; 
 	
 
 
@@ -114,7 +120,13 @@ void main()
 			PrintScreen();
 			
 		}
+		if (playerHp <= 0)
+			break;
 	}
+
+	std::string scoreText = std::to_string(playerScore);
+	printf(" your score : %s\n", scoreText.c_str());
+	printf(" 게임 종료\n");
 }
 
 void CursorView()
@@ -149,8 +161,10 @@ void GameMain()
 	PlayerBulletDraw();
 	//플레이어를 그려준다.
 	PlayerDraw();
-	//플에이어의 체력을 그려준다.
+	//플레이어의 체력을 그려준다.
 	PlayerHpDraw();
+	//플레이어의 스코어를 그려준다.
+	PlayerScoreDraw();
 	//적의 움직임
 	EnemyMove();
 	//적의 미사일을 그려준다
@@ -322,7 +336,7 @@ void EnemyDraw()
 //플레이어의 HP 체력 그리기 
 void PlayerHpDraw()
 {
-	std::string text = "PH";
+	std::string text = "HP";
 	for (int i = 0; i < text.length(); ++i) {
 		bg[1][i + 70] = text[i];
 	}
@@ -330,10 +344,25 @@ void PlayerHpDraw()
 	for (int i = 0; i < playerHp; ++i) {
 		bg[2][i + 68] = '*';
 	}
-
-
-
 }
+
+//플레이어의 스코어 그리기 
+void PlayerScoreDraw()
+{
+	std::string text = "SCORE";
+	for (int i = 0; i < text.length(); ++i)
+	{
+		bg[1][i + 60] = text[i];
+	}
+
+	std::string scoreText = std::to_string(playerScore);
+	for (int i = 0; i < scoreText.length(); ++i)
+	{
+		bg[2][i + 62] = scoreText[i];
+	}
+}
+
+
 
 void EnemyMove()
 {
@@ -401,6 +430,8 @@ void ClashEnemyAndBullet()
 					//충돌되면 적 y값을 바꿔주기
 					enemyX = 77;
 					enemyY = (rand() % 20) + 2;
+					//플레이어 스코어 증가
+					playerScore++;
 					playerBullet[i].fire = false;
 				}
 			}
@@ -419,20 +450,12 @@ void ClashPlayerAndBullet()
 			{
 				if (enemyBullet[i].x >= (playerX - 1) && enemyBullet[i].x <= (playerX + 1))
 				{
-					// gotoxy가 아닌 단순 출력으로 하는게 좋을거같음 .. 
-					//// 충돌되면 화면에 출력 
-					//gotoxy(20, 6);
-					//printf("충돌");
-
-					////1초대기
-					//Sleep(1000);
-
-					////충돌 메세지 지우기
-					//printf("          "); //공백 문자로 덮어쓰기
 
 					// 플레이어 초기 위치로 복귀
 					playerX = 0;
 					playerY = 12;
+					//화면 깜빡이기
+					blinkScreen();
 					// 플레이어의 체력 감소
 					playerHp--;
 					if (playerHp < 0)
@@ -443,4 +466,24 @@ void ClashPlayerAndBullet()
 
 		}
 	}
+}
+
+//화면의 색상을 변경하여 깜빡이는 효과주기
+void blinkScreen() {
+	// 현재 콘솔 창의 핸들을 얻어옴
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	// 현재 텍스트의 색상을 저장
+	CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+	GetConsoleScreenBufferInfo(hConsole, &consoleInfo);
+	WORD originalColor = consoleInfo.wAttributes;
+
+	// 화면을 반짝이게 만들기 위해 텍스트 색상 변경
+	SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
+
+	// 반짝이는 효과를 위해 적절한 시간 동안 대기
+	Sleep(100); // 반짝이는 시간 (밀리초 단위)
+
+	// 원래 색상으로 되돌리기
+	SetConsoleTextAttribute(hConsole, originalColor);
 }
